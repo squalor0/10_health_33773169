@@ -267,7 +267,7 @@ router.post('/generate', redirectLogin, function (req, res) {
       totalDistanceKm: totalDistanceKm,
       steps: steps,
       points: mapPoints,
-      routePoints: routePoints
+      routePoints: routePoints,
       waypoints: straightPoints 
     });
   });
