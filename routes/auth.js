@@ -1,47 +1,70 @@
 var express = require('express');
 var bcrypt = require('bcrypt');
 var router = express.Router();
+const { check, validationResult } = require('express-validator');
 
 // Show register form
 router.get('/register', function (req, res) {
   res.render('register.ejs', { error: null });
 });
 
-// Process register form
-router.post('/register', function (req, res, next) {
-  var username = req.body.username;
-  var password = req.body.password;
+// Process register form with validation
+router.post(
+  '/register',
+  [
+    check('username')
+      .trim()
+      .isLength({ min: 3, max: 20 })
+      .withMessage('Username must be between 3 and 20 characters.'),
 
-  if (!username || !password) {
-    return res.render('register.ejs', { error: 'Please enter a username and password.' });
-  }
+    check('password')
+      .isLength({ min: 8 })
+      .withMessage('Password must be at least 8 characters.')
+      .matches(/(?=.*[a-z])/)
+      .withMessage('Password must contain at least one lowercase letter.')
+      .matches(/(?=.*[A-Z])/)
+      .withMessage('Password must contain at least one uppercase letter.')
+      .matches(/(?=.*\d)/)
+      .withMessage('Password must contain at least one number.')
+      .matches(/(?=.*[^A-Za-z0-9])/)
+      .withMessage('Password must contain at least one special character.')
+  ],
+  function (req, res, next) {
+    const errors = validationResult(req);
 
-  // password rule
-  if (password.length < 8) {
-    return res.render('register.ejs', { error: 'Password must be at least 8 characters.' });
-  }
-
-  bcrypt.hash(password, 10, function (err, hash) {
-    if (err) {
-      return next(err);
+    if (!errors.isEmpty()) {
+      // Show the first validation error
+      return res.render('register.ejs', {
+        error: errors.array()[0].msg
+      });
     }
 
-    global.db.query(
-      'INSERT INTO users (username, password_hash) VALUES (?, ?)',
-      [username, hash],
-      function (err2) {
-        if (err2) {
-          console.error(err2);
-          return res.render('register.ejs', { error: 'Username may already exist.' });
-        }
+    // Sanitise inputs
+    var username = req.sanitize(req.body.username);
+    var password = req.body.password;
 
-        // Auto-login after registration
-        req.session.username = username;
-        res.redirect('/');
+    bcrypt.hash(password, 10, function (err, hash) {
+      if (err) {
+        return next(err);
       }
-    );
-  });
-});
+
+      global.db.query(
+        'INSERT INTO users (username, password_hash) VALUES (?, ?)',
+        [username, hash],
+        function (err2) {
+          if (err2) {
+            console.error(err2);
+            return res.render('register.ejs', { error: 'Username may already exist.' });
+          }
+
+          // Auto-login after registration
+          req.session.username = username;
+          res.redirect('/');
+        }
+      );
+    });
+  }
+);
 
 // Show login form
 router.get('/login', function (req, res) {

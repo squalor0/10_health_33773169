@@ -4,6 +4,7 @@ var express = require('express');
 var mysql = require('mysql2');
 var path = require('path');
 var session = require('express-session');
+var expressSanitizer = require('express-sanitizer');
 
 var app = express();
 
@@ -15,6 +16,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Body parsing for POST forms
 app.use(express.urlencoded({ extended: true }));
+app.use(expressSanitizer());
 
 // Sessions (for login)
 app.use(session({

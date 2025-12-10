@@ -172,6 +172,8 @@ router.post('/generate', redirectLogin, function (req, res) {
 // POST /routes/save
 router.post('/save', redirectLogin, function (req, res) {
   var username = req.session.username;
+  var routeName = req.sanitize(req.body.routeName);
+  var shapeName = req.sanitize(req.body.shapeName);
 
   // get the user id
   global.db.query(
@@ -196,8 +198,8 @@ router.post('/save', redirectLogin, function (req, res) {
         VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           userId,
-          req.body.routeName,
-          req.body.shapeName,
+          routeName,
+          shapeName,
           parseFloat(req.body.centerLat),
           parseFloat(req.body.centerLng),
           parseFloat(req.body.scaleKm),

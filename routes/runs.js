@@ -58,7 +58,7 @@ router.post('/add', redirectLogin, function (req, res) {
   var routeId = req.body.routeId;
   var runDate = req.body.runDate;
   var durationMinutes = req.body.durationMinutes;
-  var notes = req.body.notes;
+  var notes = req.body.notes ? req.sanitize(req.body.notes) : null;
   var rating = req.body.rating;
 
   if (!routeId || !runDate) {
