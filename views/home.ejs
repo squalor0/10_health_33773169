@@ -10,6 +10,18 @@
       <a href="/">Home</a> |
       <a href="/about">About</a> |
       <% if (loggedInUser) { %>
+        <h3>Welcome, <%= loggedInUser %></h3>
+
+        <% if (stats) { %>
+          <section>
+            <h4>My Stats</h4>
+            <ul>
+              <li>Total routes saved: <strong><%= stats.routeCount %></strong></li>
+              <li>Total runs logged: <strong><%= stats.runCount %></strong></li>
+              <li>Total distance of my routes: <strong><%= stats.totalDistanceKm %> km</strong></li>
+            </ul>
+          </section>
+        <% } %>
         <p><a href="/routes/generate">Generate a new route</a></p>
         <p><a href="/routes/search">Search my routes</a></p>
         <p><a href="/runs/add">Log a run</a></p>
