@@ -165,7 +165,8 @@ router.post('/generate', redirectLogin, function (req, res) {
     centerLng: centerLng,
     scaleKm: scaleKm,
     totalDistanceKm: totalDistanceKm,
-    steps: steps
+    steps: steps,
+    points: points
   });
 });
 

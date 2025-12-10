@@ -2,9 +2,23 @@
 <html>
   <head>
     <title>Your Route - Shape Runner</title>
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet/dist/leaflet.css"
+    >
+    <style>
+      #map {
+        width: 600px;
+        height: 400px;
+        margin-bottom: 1rem;
+        border: 1px solid #ccc;
+      }
+    </style>
   </head>
   <body>
     <h1>Your Generated Route</h1>
+    <div id="map"></div>
 
     <p>Shape: <strong><%= shapeName %></strong></p>
     <p>Centre: <%= centerLat.toFixed(5) %>, <%= centerLng.toFixed(5) %></p>
@@ -43,5 +57,35 @@
       <a href="/routes/generate">Generate another route</a> |
       <a href="/">Back to home</a>
     </p>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+      // Build a JS array of [lat, lng] points from the server-side "points"
+      var routePoints = [
+        <% for (var i = 0; i < points.length; i++) { %>
+          [<%= points[i].lat %>, <%= points[i].lng %>]<% if (i < points.length - 1) { %>,<% } %>
+        <% } %>
+      ];
+
+      if (routePoints.length > 0) {
+        // Initialise the map, centre on the first point
+        var map = L.map('map').setView(routePoints[0], 14);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Draw the route as a polyline
+        var polyline = L.polyline(routePoints, {
+          color: 'blue'
+        }).addTo(map);
+
+        // Fit the map to the route bounds
+        map.fitBounds(polyline.getBounds());
+      } else {
+        document.getElementById('map').innerHTML = 'No route points available.';
+      }
+    </script>
   </body>
 </html>
