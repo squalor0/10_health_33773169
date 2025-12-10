@@ -47,11 +47,13 @@ var mainRoutes = require('./routes/main');
 var authRoutes = require('./routes/auth');
 var fitnessRoutes = require('./routes/routes');
 var runsRoutes = require('./routes/runs');
+var apiRoutes = require('./routes/api');
 
 app.use('/', mainRoutes);
 app.use('/', authRoutes);
 app.use('/routes', fitnessRoutes);
 app.use('/runs', runsRoutes); 
+app.use('/api', apiRoutes); 
 
 // Basic error handler
 app.use(function (err, req, res, next) {
