@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Generate Route - Shape Runner</title>
+  </head>
+  <body>
+    <h1>Generate a Shaped Route</h1>
+
+    <p>Logged in as: <%= loggedInUser %></p>
+    <p><a href="/">Home</a> | <a href="/logout">Logout</a></p>
+
+    <% if (error) { %>
+      <p style="color:red;"><%= error %></p>
+    <% } %>
+
+    <form method="POST" action="/routes/generate">
+      <label>Shape:
+        <select name="shapeName">
+          <option value="heart" <%= form.shapeName === 'heart' ? 'selected' : '' %>>Heart</option>
+          <option value="square" <%= form.shapeName === 'square' ? 'selected' : '' %>>Square</option>
+          <option value="triangle" <%= form.shapeName === 'triangle' ? 'selected' : '' %>>Triangle</option>
+        </select>
+      </label>
+      <br>
+
+      <label>Center latitude:
+        <input type="text" name="centerLat" value="<%= form.centerLat %>">
+      </label>
+      <br>
+
+      <label>Center longitude:
+        <input type="text" name="centerLng" value="<%= form.centerLng %>">
+      </label>
+      <br>
+
+      <label>Scale (km, approximate size of shape):
+        <input type="number" name="scaleKm" value="<%= form.scaleKm %>" step="0.5">
+      </label>
+      <br><br>
+
+      <input type="submit" value="Generate Route">
+    </form>
+
+    <p>
+      After generating, you will see a list of simple steps and total distance.
+    </p>
+  </body>
+</html>

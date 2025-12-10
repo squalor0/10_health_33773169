@@ -43,9 +43,11 @@ app.use(function (req, res, next) {
 // Routes
 var mainRoutes = require('./routes/main');
 var authRoutes = require('./routes/auth');
+var fitnessRoutes = require('./routes/routes');
 
 app.use('/', mainRoutes);
 app.use('/', authRoutes);
+app.use('/routes', fitnessRoutes);
 
 // Basic error handler
 app.use(function (err, req, res, next) {

@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Your Route - Shape Runner</title>
+  </head>
+  <body>
+    <h1>Your Generated Route</h1>
+
+    <p>Shape: <strong><%= shapeName %></strong></p>
+    <p>Centre: <%= centerLat.toFixed(5) %>, <%= centerLng.toFixed(5) %></p>
+    <p>Scale: <%= scaleKm %> km</p>
+    <p>Total straight-line distance (approx): <strong><%= totalDistanceKm.toFixed(2) %> km</strong></p>
+
+    <h2>Steps</h2>
+    <ol>
+      <% for (var i = 0; i < steps.length; i++) { %>
+        <li>
+          <%= steps[i].instruction %><br>
+          From: (<%= steps[i].fromLat.toFixed(5) %>, <%= steps[i].fromLng.toFixed(5) %>)<br>
+          To:   (<%= steps[i].toLat.toFixed(5) %>, <%= steps[i].toLng.toFixed(5) %>)
+        </li>
+      <% } %>
+    </ol>
+
+    <p>
+      <a href="/routes/generate">Generate another route</a> |
+      <a href="/">Back to home</a>
+    </p>
+  </body>
+</html>
