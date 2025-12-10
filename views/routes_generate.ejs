@@ -1,10 +1,22 @@
 <!doctype html>
 <html>
   <head>
-    <title>Generate Route - Shape Runner</title>
+    <title>Generate Route - GPS Shape Runner</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet/dist/leaflet.css"
+    >
+    <style>
+      #drawMap {
+        width: 600px;
+        height: 400px;
+        margin-bottom: 1rem;
+        border: 1px solid #ccc;
+      }
+    </style>
   </head>
   <body>
-    <h1>Generate a Shaped Route</h1>
+    <h1>Generate a Shape Route</h1>
 
     <p>Logged in as: <%= loggedInUser %></p>
     <p><a href="/">Home</a> | <a href="/logout">Logout</a></p>
@@ -13,10 +25,13 @@
       <p style="color:red;"><%= error %></p>
     <% } %>
 
+    <p id="geoStatus" style="color: #555;"></p>
+
+    <div id="drawMap"></div>
+
     <form method="POST" action="/routes/generate">
-      <label>Shape:
+      <label>Shape (for preset mode):
         <select name="shapeName">
-          <option value="heart" <%= form.shapeName === 'heart' ? 'selected' : '' %>>Heart</option>
           <option value="square" <%= form.shapeName === 'square' ? 'selected' : '' %>>Square</option>
           <option value="triangle" <%= form.shapeName === 'triangle' ? 'selected' : '' %>>Triangle</option>
         </select>
@@ -33,16 +48,104 @@
       </label>
       <br>
 
-      <label>Scale (km, approximate size of shape):
+      <label>Scale (km, used only for preset shapes):
         <input type="number" name="scaleKm" value="<%= form.scaleKm %>" step="0.5">
       </label>
+      <br>
+
+      <!-- Hidden field that will contain the drawn points as JSON -->
+      <input type="hidden" name="pointsJson" id="pointsJson">
+
+      <p>
+        Click on the map to add points for your custom shape. Each click adds
+        a point and joins it to the previous one. Use "Clear shape" to start
+        again. If you don't draw anything, the preset shape above will be used.
+      </p>
+
+      <button type="button" id="clearShapeBtn">Clear shape</button>
       <br><br>
 
-      <input type="submit" value="Generate Route">
+      <input type="submit" id="generateBtn" value="Generate Route" disabled>
     </form>
 
-    <p>
-      After generating, you will see a list of simple steps and total distance.
-    </p>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+      (function () {
+        var statusEl = document.getElementById('geoStatus');
+        var latInput = document.querySelector('input[name="centerLat"]');
+        var lngInput = document.querySelector('input[name="centerLng"]');
+        var pointsField = document.getElementById('pointsJson');
+        var generateBtn = document.getElementById('generateBtn');
+        var clearBtn = document.getElementById('clearShapeBtn');
+
+        // Default center
+        var startLat = parseFloat(latInput.value) || 51.505;
+        var startLng = parseFloat(lngInput.value) || -0.09;
+
+        var map = L.map('drawMap').setView([startLat, startLng], 14);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        var drawnPoints = [];
+        var polyline = L.polyline([], { color: 'red' }).addTo(map);
+
+        function updatePointsField() {
+          var simplePoints = drawnPoints.map(function (p) {
+            return { lat: p.lat, lng: p.lng };
+          });
+          pointsField.value = JSON.stringify(simplePoints);
+          // Enable generate when at least 2 points exist
+          generateBtn.disabled = simplePoints.length < 2;
+        }
+
+        map.on('click', function (e) {
+          drawnPoints.push(e.latlng);
+          L.circleMarker(e.latlng, { radius: 4 }).addTo(map);
+          polyline.setLatLngs(drawnPoints);
+          updatePointsField();
+        });
+
+        clearBtn.addEventListener('click', function () {
+          drawnPoints = [];
+          pointsField.value = '';
+          generateBtn.disabled = true;
+          polyline.setLatLngs([]);
+          // Remove all markers
+          map.eachLayer(function (layer) {
+            if (layer instanceof L.CircleMarker) {
+              map.removeLayer(layer);
+            }
+          });
+        });
+
+        // Geolocation to move map + centre inputs near the user
+        if (!navigator.geolocation) {
+          statusEl.textContent = 'Geolocation is not supported by this browser.';
+        } else {
+          statusEl.textContent = 'Trying to detect your location...';
+
+          navigator.geolocation.getCurrentPosition(
+            function (position) {
+              var lat = position.coords.latitude;
+              var lng = position.coords.longitude;
+
+              latInput.value = lat.toFixed(5);
+              lngInput.value = lng.toFixed(5);
+
+              map.setView([lat, lng], 14);
+
+              statusEl.textContent = 'Location detected. Click on the map to draw your shape.';
+            },
+            function (error) {
+              console.log('Geolocation error:', error);
+              statusEl.textContent = 'Could not get your location; using default centre.';
+            }
+          );
+        }
+      })();
+    </script>
   </body>
 </html>

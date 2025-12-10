@@ -23,7 +23,7 @@
     <p>Shape: <strong><%= shapeName %></strong></p>
     <p>Centre: <%= centerLat.toFixed(5) %>, <%= centerLng.toFixed(5) %></p>
     <p>Scale: <%= scaleKm %> km</p>
-    <p>Total straight-line distance (approx): <strong><%= totalDistanceKm.toFixed(2) %> km</strong></p>
+    <p>Total route distance (approx): <strong><%= totalDistanceKm.toFixed(2) %> km</strong></p>
 
     <h2>Steps</h2>
     <ol>
@@ -60,32 +60,31 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-      // Build a JS array of [lat, lng] points from the server-side "points"
-      var routePoints = [
-        <% for (var i = 0; i < points.length; i++) { %>
-          [<%= points[i].lat %>, <%= points[i].lng %>]<% if (i < points.length - 1) { %>,<% } %>
-        <% } %>
-      ];
+        // Route polyline points ([lat, lng] pairs) from server
+        var routePoints = <%- JSON.stringify(routePoints) %>;
+        // Original waypoints (clicked points or shape corners)
+        var waypoints = <%- JSON.stringify(waypoints || []) %>;
 
-      if (routePoints.length > 0) {
-        // Initialise the map, centre on the first point
-        var map = L.map('map').setView(routePoints[0], 14);
+        if (routePoints.length > 0) {
+            var map = L.map('map').setView(routePoints[0], 14);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-          attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
 
-        // Draw the route as a polyline
-        var polyline = L.polyline(routePoints, {
-          color: 'blue'
-        }).addTo(map);
+            var polyline = L.polyline(routePoints, { color: 'blue' }).addTo(map);
+            map.fitBounds(polyline.getBounds());
 
-        // Fit the map to the route bounds
-        map.fitBounds(polyline.getBounds());
-      } else {
-        document.getElementById('map').innerHTML = 'No route points available.';
-      }
+            // Add numbered markers for the waypoints
+            for (var i = 0; i < waypoints.length; i++) {
+                var wp = waypoints[i];
+                var marker = L.circleMarker([wp.lat, wp.lng], { radius: 5, color: 'red' }).addTo(map);
+                marker.bindPopup('Point ' + (i + 1));
+            }
+        } else {
+            document.getElementById('map').innerHTML = 'No route points available.';
+        }
     </script>
   </body>
 </html>

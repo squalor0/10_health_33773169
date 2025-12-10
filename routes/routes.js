@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+var request = require('request');
 
 // Simple auth guard
 function redirectLogin(req, res, next) {
@@ -10,17 +11,9 @@ function redirectLogin(req, res, next) {
   }
 }
 
-// Helper: some simple shapes in [0,1] space
 function getShapeCoords(shapeName) {
-  if (shapeName === 'square') {
-    return [
-      [0, 0],
-      [1, 0],
-      [1, 1],
-      [0, 1],
-      [0, 0]
-    ];
-  } else if (shapeName === 'triangle') {
+   if (shapeName === 'triangle') {
+    // Simple triangle
     return [
       [0.0, 0.0],
       [1.0, 0.0],
@@ -28,12 +21,13 @@ function getShapeCoords(shapeName) {
       [0.0, 0.0]
     ];
   } else {
+    // default: square
     return [
-      [0.5, 0.0],
-      [0.9, 0.4],
-      [0.5, 1.0],
-      [0.1, 0.4],
-      [0.5, 0.0]
+      [0, 0],
+      [1, 0],
+      [1, 1],
+      [0, 1],
+      [0, 0]
     ];
   }
 }
@@ -96,12 +90,79 @@ function distanceKm(lat1, lng1, lat2, lng2) {
   return R * c;
 }
 
+// Call OpenRouteService to snap points to roads
+function routeShapeOnRoads(points, callback) {
+  var apiKey = process.env.ORS_API_KEY;
+
+  // If no key configured, just skip snapping and use straight lines
+  if (!apiKey) {
+    console.log('No ORS_API_KEY set, using straight lines only.');
+    return callback(null, null);
+  }
+
+  // ORS expects [lng, lat]
+  var coords = points.map(function (p) {
+    return [p.lng, p.lat];
+  });
+
+  var options = {
+    url: 'https://api.openrouteservice.org/v2/directions/foot-walking/geojson',
+    method: 'POST',
+    headers: {
+      'Authorization': apiKey,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      coordinates: coords
+    })
+  };
+
+  request(options, function (err, response, body) {
+    if (err) {
+      console.error('ORS error:', err);
+      return callback(err);
+    }
+
+    try {
+      var data = JSON.parse(body);
+
+      if (!data.features || data.features.length === 0) {
+        return callback(new Error('No route returned from ORS'));
+      }
+
+      var feature = data.features[0];
+
+      // geometry.coordinates is [[lng, lat], [lng, lat], ...]
+      var routedCoords = feature.geometry.coordinates;
+
+      var routedPoints = routedCoords.map(function (c) {
+        return { lat: c[1], lng: c[0] };
+      });
+
+      // distance is in metres
+      var distanceMeters = feature.properties && feature.properties.summary
+        ? feature.properties.summary.distance
+        : null;
+
+      var distanceKm = distanceMeters ? distanceMeters / 1000 : null;
+
+      callback(null, {
+        routedPoints: routedPoints,
+        distanceKm: distanceKm
+      });
+    } catch (e) {
+      console.error('Error parsing ORS response:', e);
+      callback(e);
+    }
+  });
+}
+
 // GET /routes/generate - show form
 router.get('/generate', redirectLogin, function (req, res) {
   res.render('routes_generate.ejs', {
     error: null,
     form: {
-      shapeName: 'heart',
+      shapeName: 'square',
       centerLat: '51.505',
       centerLng: '-0.09',
       scaleKm: '2'
@@ -111,7 +172,7 @@ router.get('/generate', redirectLogin, function (req, res) {
 
 // POST /routes/generate - process form
 router.post('/generate', redirectLogin, function (req, res) {
-  var shapeName = req.body.shapeName || 'heart';
+  var shapeName = req.body.shapeName || 'square';
   var centerLat = parseFloat(req.body.centerLat);
   var centerLng = parseFloat(req.body.centerLng);
   var scaleKm = parseFloat(req.body.scaleKm);
@@ -127,46 +188,88 @@ router.post('/generate', redirectLogin, function (req, res) {
       }
     });
   }
+  var straightPoints = null;
 
-  var shapeCoords = getShapeCoords(shapeName);
-  var points = shapeToLatLng(shapeCoords, centerLat, centerLng, scaleKm);
-
-  // Build directions
-  var steps = [];
-  var totalDistanceKm = 0;
-
-  for (var i = 1; i < points.length; i++) {
-    var prev = points[i - 1];
-    var curr = points[i];
-
-    var dist = distanceKm(prev.lat, prev.lng, curr.lat, curr.lng);
-    totalDistanceKm += dist;
-
-    steps.push({
-      fromLat: prev.lat,
-      fromLng: prev.lng,
-      toLat: curr.lat,
-      toLng: curr.lng,
-      distanceKm: dist,
-      instruction:
-        'Run from point ' +
-        i +
-        ' to point ' +
-        (i + 1) +
-        ' (~' +
-        dist.toFixed(2) +
-        ' km)'
-    });
+  // Prefer custom drawn points if provided
+  var pointsJson = req.body.pointsJson;
+  if (pointsJson && pointsJson.trim() !== '') {
+    try {
+      var parsed = JSON.parse(pointsJson);
+      if (Array.isArray(parsed) && parsed.length >= 2) {
+        straightPoints = parsed;
+        shapeName = 'custom';
+      }
+    } catch (e) {
+      console.log('Error parsing pointsJson:', e);
+      // fall through to shape fallback
+    }
+  }
+  if (!straightPoints) {
+    var shapeCoords = getShapeCoords(shapeName);
+    straightPoints = shapeToLatLng(shapeCoords, centerLat, centerLng, scaleKm);
   }
 
-  res.render('routes_result.ejs', {
-    shapeName: shapeName,
-    centerLat: centerLat,
-    centerLng: centerLng,
-    scaleKm: scaleKm,
-    totalDistanceKm: totalDistanceKm,
-    steps: steps,
-    points: points
+  // try to get a road-snapped route from ORS
+  routeShapeOnRoads(straightPoints, function (err, routingResult) {
+    // Points shown on the map
+    var mapPoints = straightPoints;
+    var totalDistanceKm;
+
+    if (!err && routingResult && routingResult.routedPoints && routingResult.routedPoints.length > 0) {
+      console.log('Using ORS routed path');
+      mapPoints = routingResult.routedPoints;
+      totalDistanceKm = routingResult.distanceKm;
+    } else {
+      console.log('Falling back to straight-line distance and points.');
+      // Build straight-line distance as before
+      totalDistanceKm = 0;
+      for (var i = 1; i < straightPoints.length; i++) {
+        var prev = straightPoints[i - 1];
+        var curr = straightPoints[i];
+        totalDistanceKm += distanceKm(prev.lat, prev.lng, curr.lat, curr.lng);
+      }
+    }
+
+    // Keep simple steps based on the original straight-line shape
+    var steps = [];
+    for (var i = 1; i < straightPoints.length; i++) {
+      var prev2 = straightPoints[i - 1];
+      var curr2 = straightPoints[i];
+      var dist2 = distanceKm(prev2.lat, prev2.lng, curr2.lat, curr2.lng);
+
+      steps.push({
+        fromLat: prev2.lat,
+        fromLng: prev2.lng,
+        toLat: curr2.lat,
+        toLng: curr2.lng,
+        distanceKm: dist2,
+        instruction:
+          'Run from point ' +
+          i +
+          ' to point ' +
+          (i + 1) +
+          ' (approx ' +
+          dist2.toFixed(2) +
+          ' km straight-line)'
+      });
+    }
+
+    // Prepare [lat, lng] pairs for Leaflet
+    var routePoints = mapPoints.map(function (p) {
+      return [p.lat, p.lng];
+    });
+
+    res.render('routes_result.ejs', {
+      shapeName: shapeName,
+      centerLat: centerLat,
+      centerLng: centerLng,
+      scaleKm: scaleKm,
+      totalDistanceKm: totalDistanceKm,
+      steps: steps,
+      points: mapPoints,
+      routePoints: routePoints
+      waypoints: straightPoints 
+    });
   });
 });
 
