@@ -10,11 +10,10 @@
       <a href="/">Home</a> |
       <a href="/about">About</a> |
       <% if (loggedInUser) { %>
-        <span>Welcome, <%= loggedInUser %></span> |
-        <a href="/logout">Logout</a>
+        <p><a href="/routes/generate">Generate a new route</a></p>
+        <p><a href="/routes/search">Search my routes</a></p>
       <% } else { %>
-        <a href="/login">Login</a> |
-        <a href="/register">Register</a>
+        <p>Please <a href="/login">log in</a> or <a href="/register">register</a> to get started.</p>
       <% } %>
     </nav>
 

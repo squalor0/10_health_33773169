@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Search My Routes - Shape Runner</title>
+  </head>
+  <body>
+    <h1>Search My Routes</h1>
+
+    <p>Logged in as: <%= loggedInUser %></p>
+    <p>
+      <a href="/">Home</a> |
+      <a href="/routes/generate">Generate new route</a> |
+      <a href="/logout">Logout</a>
+    </p>
+
+    <h2>Search Filters</h2>
+    <form method="GET" action="/routes/search">
+      <label>Shape:
+        <select name="shapeName">
+          <option value="all" <%= form.shapeName === 'all' ? 'selected' : '' %>>All</option>
+          <option value="heart" <%= form.shapeName === 'heart' ? 'selected' : '' %>>Heart</option>
+          <option value="square" <%= form.shapeName === 'square' ? 'selected' : '' %>>Square</option>
+          <option value="triangle" <%= form.shapeName === 'triangle' ? 'selected' : '' %>>Triangle</option>
+        </select>
+      </label>
+      <br>
+
+      <label>Min distance (km):
+        <input type="number" step="0.1" name="minDistance" value="<%= form.minDistance %>">
+      </label>
+      <br>
+
+      <label>Max distance (km):
+        <input type="number" step="0.1" name="maxDistance" value="<%= form.maxDistance %>">
+      </label>
+      <br><br>
+
+      <input type="submit" value="Search">
+    </form>
+
+    <h2>Results</h2>
+
+    <% if (routes.length === 0) { %>
+      <p>No routes found. Try changing your filters or save a route first.</p>
+    <% } else { %>
+      <table border="1" cellpadding="4" cellspacing="0">
+        <tr>
+          <th>Name</th>
+          <th>Shape</th>
+          <th>Distance (km)</th>
+          <th>Centre (lat,lng)</th>
+          <th>Created</th>
+        </tr>
+        <% routes.forEach(function(route) { %>
+          <tr>
+            <td><%= route.name %></td>
+            <td><%= route.shape_name %></td>
+            <td><%= route.total_distance_km || 'N/A' %></td>
+            <td><%= route.center_lat %>, <%= route.center_lng %></td>
+            <td><%= route.created_at %></td>
+          </tr>
+        <% }) %>
+      </table>
+    <% } %>
+  </body>
+</html>

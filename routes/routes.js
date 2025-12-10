@@ -221,4 +221,69 @@ router.post('/save', redirectLogin, function (req, res) {
   );
 });
 
+// GET /routes/search - search routes for logged-in user
+router.get('/search', redirectLogin, function (req, res) {
+  var username = req.session.username;
+
+  var shapeName = req.query.shapeName || 'all';
+  var minDistance = req.query.minDistance;
+  var maxDistance = req.query.maxDistance;
+
+  // get the user id
+  global.db.query(
+    'SELECT id FROM users WHERE username = ?',
+    [username],
+    function (err, users) {
+      if (err) {
+        console.error(err);
+        return res.send('Database error');
+      }
+
+      if (users.length === 0) {
+        return res.send('User not found');
+      }
+
+      var userId = users[0].id;
+
+      // Build SQL with optional filters
+      var sql = 'SELECT * FROM routes WHERE user_id = ?';
+      var params = [userId];
+
+      if (shapeName && shapeName !== 'all') {
+        sql += ' AND shape_name = ?';
+        params.push(shapeName);
+      }
+
+      if (minDistance && !isNaN(parseFloat(minDistance))) {
+        sql += ' AND total_distance_km >= ?';
+        params.push(parseFloat(minDistance));
+      }
+
+      if (maxDistance && !isNaN(parseFloat(maxDistance))) {
+        sql += ' AND total_distance_km <= ?';
+        params.push(parseFloat(maxDistance));
+      }
+
+      sql += ' ORDER BY created_at DESC';
+
+      global.db.query(sql, params, function (err2, routes) {
+        if (err2) {
+          console.error(err2);
+          return res.send('Error retrieving routes');
+        }
+
+        res.render('routes_search.ejs', {
+          routes: routes,
+          form: {
+            shapeName: shapeName,
+            minDistance: minDistance || '',
+            maxDistance: maxDistance || ''
+          }
+        });
+      });
+    }
+  );
+});
+
+
 module.exports = router;
