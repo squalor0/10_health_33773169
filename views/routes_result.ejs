@@ -22,6 +22,23 @@
       <% } %>
     </ol>
 
+    <h2>Save This Route</h2>
+    <form method="POST" action="/routes/save">
+        <label>Route Name:
+            <input type="text" name="routeName" required>
+        </label>
+        <br>
+
+        <!-- Hidden fields -->
+        <input type="hidden" name="shapeName" value="<%= shapeName %>">
+        <input type="hidden" name="centerLat" value="<%= centerLat %>">
+        <input type="hidden" name="centerLng" value="<%= centerLng %>">
+        <input type="hidden" name="scaleKm" value="<%= scaleKm %>">
+        <input type="hidden" name="totalDistanceKm" value="<%= totalDistanceKm %>">
+
+        <input type="submit" value="Save Route">
+    </form>
+
     <p>
       <a href="/routes/generate">Generate another route</a> |
       <a href="/">Back to home</a>

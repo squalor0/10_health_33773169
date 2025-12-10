@@ -169,4 +169,56 @@ router.post('/generate', redirectLogin, function (req, res) {
   });
 });
 
+// POST /routes/save
+router.post('/save', redirectLogin, function (req, res) {
+  var username = req.session.username;
+
+  // get the user id
+  global.db.query(
+    'SELECT id FROM users WHERE username = ?',
+    [username],
+    function (err, users) {
+      if (err) {
+        console.error(err);
+        return res.send('Database error');
+      }
+
+      if (users.length === 0) {
+        return res.send('User not found');
+      }
+
+      var userId = users[0].id;
+
+      // insert the route
+      global.db.query(
+        `INSERT INTO routes 
+        (user_id, name, shape_name, center_lat, center_lng, scale_km, total_distance_km)
+        VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          userId,
+          req.body.routeName,
+          req.body.shapeName,
+          parseFloat(req.body.centerLat),
+          parseFloat(req.body.centerLng),
+          parseFloat(req.body.scaleKm),
+          parseFloat(req.body.totalDistanceKm)
+        ],
+        function (err2) {
+          if (err2) {
+            console.error(err2);
+            return res.send('Error saving route');
+          }
+
+          // Redirect to a confirmation page or back home
+          res.send(`
+            <h1>Route Saved!</h1>
+            <p><a href="/">Home</a></p>
+            <p><a href="/routes/generate">Generate Another Route</a></p>
+          `);
+        }
+      );
+    }
+  );
+});
+
 module.exports = router;
