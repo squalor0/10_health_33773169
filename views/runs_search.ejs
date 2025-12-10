@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+  <head>
+    <title>My Run History - Shape Runner</title>
+  </head>
+  <body>
+    <h1>My Run History</h1>
+
+    <p>Logged in as: <%= loggedInUser %></p>
+    <p>
+      <a href="/">Home</a> |
+      <a href="/routes/generate">Generate route</a> |
+      <a href="/routes/search">Search routes</a> |
+      <a href="/runs/add">Log a run</a> |
+      <a href="/logout">Logout</a>
+    </p>
+
+    <h2>Filters</h2>
+    <form method="GET" action="/runs/search">
+      <label>From date:
+        <input type="date" name="fromDate" value="<%= form.fromDate %>">
+      </label>
+      <br>
+
+      <label>To date:
+        <input type="date" name="toDate" value="<%= form.toDate %>">
+      </label>
+      <br>
+
+      <label>Minimum rating:
+        <input type="number" name="minRating" min="1" max="5" value="<%= form.minRating %>">
+      </label>
+      <br><br>
+
+      <input type="submit" value="Search">
+    </form>
+
+    <h2>Results</h2>
+
+    <% if (runs.length === 0) { %>
+      <p>No runs found. Try changing your filters or log a run first.</p>
+    <% } else { %>
+      <table border="1" cellpadding="4" cellspacing="0">
+        <tr>
+          <th>Date</th>
+          <th>Route</th>
+          <th>Duration (min)</th>
+          <th>Rating</th>
+          <th>Notes</th>
+        </tr>
+        <% runs.forEach(function(run) { %>
+          <tr>
+            <td><%= run.run_date %></td>
+            <td><%= run.route_name %></td>
+            <td><%= run.duration_minutes %></td>
+            <td><%= run.rating %></td>
+            <td><%= run.notes %></td>
+          </tr>
+        <% }); %>
+      </table>
+    <% } %>
+  </body>
+</html>

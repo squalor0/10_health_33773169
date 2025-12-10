@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Log a Run - Shape Runner</title>
+  </head>
+  <body>
+    <h1>Log a Run</h1>
+
+    <p>Logged in as: <%= loggedInUser %></p>
+    <p>
+      <a href="/">Home</a> |
+      <a href="/routes/generate">Generate route</a> |
+      <a href="/routes/search">Search routes</a> |
+      <a href="/runs/search">My run history</a> |
+      <a href="/logout">Logout</a>
+    </p>
+
+    <% if (error) { %>
+      <p style="color:red;"><%= error %></p>
+    <% } %>
+
+    <% if (routes.length === 0) { %>
+      <p>You don't have any routes yet. <a href="/routes/generate">Generate and save a route first.</a></p>
+    <% } else { %>
+      <form method="POST" action="/runs/add">
+        <label>Route:
+          <select name="routeId">
+            <% routes.forEach(function(route) { %>
+              <option value="<%= route.id %>"><%= route.name %></option>
+            <% }); %>
+          </select>
+        </label>
+        <br>
+
+        <label>Date of run:
+          <input type="date" name="runDate" required>
+        </label>
+        <br>
+
+        <label>Duration (minutes):
+          <input type="number" name="durationMinutes" step="0.1">
+        </label>
+        <br>
+
+        <label>Rating (1-5):
+          <input type="number" name="rating" min="1" max="5">
+        </label>
+        <br>
+
+        <label>Notes:
+          <br>
+          <textarea name="notes" rows="3" cols="40"></textarea>
+        </label>
+        <br><br>
+
+        <input type="submit" value="Save Run">
+      </form>
+    <% } %>
+  </body>
+</html>
