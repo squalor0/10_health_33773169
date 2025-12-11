@@ -271,6 +271,13 @@ ol li {
   margin: 0.25rem 0;
 }
 
+.attribution {
+  margin-top: 20px;
+  font-size: 0.8rem;
+  color: #888;
+  text-align: center;
+}
+
 /* Make things a bit nicer on small screens */
 @media (max-width: 640px) {
   .page {
