@@ -1,0 +1,9 @@
+home=https://www.doc.gold.ac.uk/usr/380/
+about=https://www.doc.gold.ac.uk/usr/380/about
+login=https://www.doc.gold.ac.uk/usr/380/login
+register=https://www.doc.gold.ac.uk/usr/380/register
+generate_route=https://www.doc.gold.ac.uk/usr/380/routes/generate
+search_routes=https://www.doc.gold.ac.uk/usr/380/routes/search
+log_run=https://www.doc.gold.ac.uk/usr/380/runs/add
+run_history=https://www.doc.gold.ac.uk/usr/380/runs/search
+logout=https://www.doc.gold.ac.uk/usr/380/logout
