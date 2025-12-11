@@ -4,9 +4,62 @@
     <title>About - GPS Shape Runner</title>
     <link rel="stylesheet" href="/styles.css">
   </head>
+
   <body>
-    <h1>About</h1>
-    <p>Shape Runner is a health & fitness app built with Node.js, Express, EJS and MySQL.</p>
-    <p><a href="/">Back to home</a></p>
+    <!-- Navigation Bar -->
+    <nav>
+      <a href="/">Home</a>
+      <a href="/about">About</a>
+
+      <% if (loggedInUser) { %>
+        <a href="/routes/generate">Generate Route</a>
+        <a href="/routes/search">My Routes</a>
+        <a href="/runs/add">Log Run</a>
+        <a href="/runs/search">My Runs</a>
+
+        <span style="margin-left:auto;">
+          <a href="/logout">Logout</a>
+        </span>
+      <% } else { %>
+        <span style="margin-left:auto;">
+          <a href="/login">Login</a>
+          <a href="/register">Register</a>
+        </span>
+      <% } %>
+    </nav>
+
+    <div class="page">
+      <h1>About Shape Runner</h1>
+
+      <div class="card">
+        <p>
+          Shape Runner is a health & fitness web application that transforms
+          your creative doodles into real-world running routes.
+        </p>
+
+        <p>
+          You can draw any shape on the map, and the app will generate a
+          road-snapped running route that matches it as closely as possible.
+          You can save routes, log runs, and search your fitness history.
+        </p>
+
+        <p class="muted">
+          Built using Node.js, Express, EJS and MySQL — as part of a Goldsmiths
+          Dynamic Web Applications course.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Features</h3>
+        <ul class="stats-list">
+          <li>Create custom map-drawn running shapes</li>
+          <li>Snap shapes onto real roads using routing APIs</li>
+          <li>Save and search your personal running routes</li>
+          <li>Log your runs and view your history</li>
+        </ul>
+      </div>
+
+      <p><a href="/">← Back to home</a></p>
+    </div>
   </body>
 </html>

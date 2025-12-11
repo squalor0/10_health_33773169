@@ -4,64 +4,100 @@
     <title>Search My Routes - Shape Runner</title>
     <link rel="stylesheet" href="/styles.css">
   </head>
+
   <body>
-    <h1>Search My Routes</h1>
+    <!-- Navigation Bar -->
+    <nav>
+      <a href="/">Home</a>
+      <a href="/about">About</a>
+      <a href="/routes/generate">Generate Route</a>
+      <a href="/runs/add">Log Run</a>
+      <a href="/runs/search">My Runs</a>
 
-    <p>Logged in as: <%= loggedInUser %></p>
-    <p>
-      <a href="/">Home</a> |
-      <a href="/routes/generate">Generate new route</a> |
-      <a href="/logout">Logout</a>
-    </p>
+      <span style="margin-left:auto;">
+        <a href="/logout">Logout</a>
+      </span>
+    </nav>
 
-    <h2>Search Filters</h2>
-    <form method="GET" action="/routes/search">
-      <label>Shape:
-        <select name="shapeName">
-          <option value="all" <%= form.shapeName === 'all' ? 'selected' : '' %>>All</option>
-          <option value="heart" <%= form.shapeName === 'heart' ? 'selected' : '' %>>Heart</option>
-          <option value="square" <%= form.shapeName === 'square' ? 'selected' : '' %>>Square</option>
-          <option value="triangle" <%= form.shapeName === 'triangle' ? 'selected' : '' %>>Triangle</option>
-        </select>
-      </label>
-      <br>
+    <div class="page">
+      <h1>Search My Routes</h1>
 
-      <label>Min distance (km):
-        <input type="number" step="0.1" name="minDistance" value="<%= form.minDistance %>">
-      </label>
-      <br>
+      <div class="card">
+        <h3>Search Filters</h3>
 
-      <label>Max distance (km):
-        <input type="number" step="0.1" name="maxDistance" value="<%= form.maxDistance %>">
-      </label>
-      <br><br>
+        <form method="GET" action="/routes/search">
+          <label>Shape:
+            <select name="shapeName">
+              <option value="all" <%= form.shapeName === 'all' ? 'selected' : '' %>>All</option>
+              <option value="heart" <%= form.shapeName === 'heart' ? 'selected' : '' %>>Heart</option>
+              <option value="square" <%= form.shapeName === 'square' ? 'selected' : '' %>>Square</option>
+              <option value="triangle" <%= form.shapeName === 'triangle' ? 'selected' : '' %>>Triangle</option>
+            </select>
+          </label>
 
-      <input type="submit" value="Search">
-    </form>
+          <label>Min distance (km):
+            <input type="number" step="0.1" name="minDistance" value="<%= form.minDistance %>">
+          </label>
 
-    <h2>Results</h2>
+          <label>Max distance (km):
+            <input type="number" step="0.1" name="maxDistance" value="<%= form.maxDistance %>">
+          </label>
 
-    <% if (routes.length === 0) { %>
-      <p>No routes found. Try changing your filters or save a route first.</p>
-    <% } else { %>
-      <table border="1" cellpadding="4" cellspacing="0">
-        <tr>
-          <th>Name</th>
-          <th>Shape</th>
-          <th>Distance (km)</th>
-          <th>Centre (lat,lng)</th>
-          <th>Created</th>
-        </tr>
-        <% routes.forEach(function(route) { %>
-          <tr>
-            <td><%= route.name %></td>
-            <td><%= route.shape_name %></td>
-            <td><%= route.total_distance_km || 'N/A' %></td>
-            <td><%= route.center_lat %>, <%= route.center_lng %></td>
-            <td><%= route.created_at %></td>
-          </tr>
-        <% }) %>
-      </table>
-    <% } %>
+          <input type="submit" value="Search">
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>Results</h3>
+
+        <% if (routes.length === 0) { %>
+          <p>No routes found. Try adjusting your filters.</p>
+        <% } else { %>
+
+          <table class="styled-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Shape</th>
+                <th>Distance (km)</th>
+                <th>Centre</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% routes.forEach(function(route) { %>
+                <tr>
+                  <td><%= route.name %></td>
+                  <td><%= route.shape_name %></td>
+
+                  <td>
+                    <% if (route.total_distance_km && !isNaN(route.total_distance_km)) { %>
+                      <%= Number(route.total_distance_km).toFixed(2) %>
+                    <% } else { %>
+                      N/A
+                    <% } %>
+                  </td>
+
+                  <td>
+                    <%= route.center_lat.toFixed(5) %>,
+                    <%= route.center_lng.toFixed(5) %>
+                  </td>
+
+                  <td>
+                    <% if (route.created_at.toISOString) { %>
+                      <%= route.created_at.toISOString().slice(0,16).replace("T"," ") %>
+                    <% } else { %>
+                      <%= route.created_at %>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+
+        <% } %>
+
+      </div>
+    </div>
   </body>
 </html>

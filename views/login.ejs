@@ -1,28 +1,49 @@
 <!doctype html>
 <html>
   <head>
-    <title>Login</title>
+    <title>Login - Shape Runner</title>
     <link rel="stylesheet" href="/styles.css">
   </head>
+
   <body>
-    <h1>Login</h1>
+    <!-- Navigation Bar -->
+    <nav>
+      <a href="/">Home</a>
+      <a href="/about">About</a>
 
-    <% if (error) { %>
-      <p style="color:red;"><%= error %></p>
-    <% } %>
+      <span style="margin-left:auto;">
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+      </span>
+    </nav>
 
-    <form method="POST" action="/login">
-      <label>Username:
-        <input type="text" name="username">
-      </label>
-      <br>
-      <label>Password:
-        <input type="password" name="password">
-      </label>
-      <br>
-      <input type="submit" value="Login">
-    </form>
+    <div class="page">
+      <h1>Login</h1>
 
-    <p><a href="/">Back to home</a></p>
+      <% if (error) { %>
+        <div class="error"><%= error %></div>
+      <% } %>
+
+      <div class="card">
+        <form method="POST" action="/login">
+          <label>Username:
+            <input type="text" name="username" required>
+          </label>
+
+          <label>Password:
+            <input type="password" name="password" required>
+          </label>
+
+          <input type="submit" value="Login">
+        </form>
+      </div>
+
+      <p>
+        Don't have an account?
+        <a href="/register">Register here</a>.
+      </p>
+
+      <p><a href="/">← Back to home</a></p>
+    </div>
   </body>
 </html>

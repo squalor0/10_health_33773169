@@ -4,35 +4,75 @@
     <title>Shape Runner - Home</title>
     <link rel="stylesheet" href="/styles.css">
   </head>
+
   <body>
-    <h1>Shape Runner</h1>
-
+    <!-- Navigation Bar -->
     <nav>
-      <a href="/">Home</a> |
-      <a href="/about">About</a> |
-      <% if (loggedInUser) { %>
-        <h3>Welcome, <%= loggedInUser %></h3>
+      <a href="/">Home</a>
+      <a href="/about">About</a>
 
-        <% if (stats) { %>
-          <section>
-            <h4>My Stats</h4>
-            <ul>
+      <% if (loggedInUser) { %>
+        <a href="/routes/generate">Generate Route</a>
+        <a href="/routes/search">My Routes</a>
+        <a href="/runs/add">Log Run</a>
+        <a href="/runs/search">My Runs</a>
+
+        <!-- Logout on the right -->
+        <span style="margin-left:auto;">
+          <a href="/logout">Logout</a>
+        </span>
+      <% } else { %>
+        <span style="margin-left:auto;">
+          <a href="/login">Login</a>
+          <a href="/register">Register</a>
+        </span>
+      <% } %>
+    </nav>
+
+    <div class="page">
+      <h1>Shape Runner</h1>
+
+      <% if (loggedInUser) { %>
+        
+        <div class="card">
+          <div class="card-header">
+            <h2>Welcome, <%= loggedInUser %></h2>
+          </div>
+
+          <% if (stats) { %>
+            <h3>Your Stats</h3>
+            <ul class="stats-list">
               <li>Total routes saved: <strong><%= stats.routeCount %></strong></li>
               <li>Total runs logged: <strong><%= stats.runCount %></strong></li>
               <li>Total distance of my routes: <strong><%= stats.totalDistanceKm %> km</strong></li>
             </ul>
-          </section>
-        <% } %>
-        <p><a href="/routes/generate">Generate a new route</a></p>
-        <p><a href="/routes/search">Search my routes</a></p>
-        <p><a href="/runs/add">Log a run</a></p>
-        <p><a href="/runs/search">View my run history</a></p>
-      <% } else { %>
-        <p>Please <a href="/login">log in</a> or <a href="/register">register</a> to get started.</p>
-      <% } %>
-    </nav>
+          <% } %>
+        </div>
 
-    <h2>Health & Fitness</h2>
-    <p>This app will let you generate fun running routes in different shapes.</p>
+        <div class="card">
+          <h3>Get Started</h3>
+          <ul class="stats-list">
+            <li><a href="/routes/generate">Generate a new route</a></li>
+            <li><a href="/routes/search">Search my saved routes</a></li>
+            <li><a href="/runs/add">Log a run</a></li>
+            <li><a href="/runs/search">View my running history</a></li>
+          </ul>
+        </div>
+
+      <% } else { %>
+
+        <div class="card">
+          <h2>Welcome</h2>
+          <p>
+            This app lets you draw fun shapes on a map and generates running routes that match them.
+            Please <a href="/login">log in</a> or <a href="/register">register</a> to get started.
+          </p>
+        </div>
+
+      <% } %>
+
+      <h2>Health & Fitness</h2>
+      <p>This app helps you create artistic running routes and track your runs.</p>
+    </div>
   </body>
 </html>

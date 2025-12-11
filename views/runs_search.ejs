@@ -4,61 +4,93 @@
     <title>My Run History - Shape Runner</title>
     <link rel="stylesheet" href="/styles.css">
   </head>
+
   <body>
-    <h1>My Run History</h1>
+    <!-- Navigation Bar -->
+    <nav>
+      <a href="/">Home</a>
+      <a href="/about">About</a>
+      <a href="/routes/generate">Generate Route</a>
+      <a href="/routes/search">My Routes</a>
+      <a href="/runs/add">Log Run</a>
+      <a href="/runs/search">My Runs</a>
 
-    <p>Logged in as: <%= loggedInUser %></p>
-    <p>
-      <a href="/">Home</a> |
-      <a href="/routes/generate">Generate route</a> |
-      <a href="/routes/search">Search routes</a> |
-      <a href="/runs/add">Log a run</a> |
-      <a href="/logout">Logout</a>
-    </p>
+      <span style="margin-left:auto;">
+        <a href="/logout">Logout</a>
+      </span>
+    </nav>
 
-    <h2>Filters</h2>
-    <form method="GET" action="/runs/search">
-      <label>From date:
-        <input type="date" name="fromDate" value="<%= form.fromDate %>">
-      </label>
-      <br>
+    <div class="page">
+      <h1>My Run History</h1>
 
-      <label>To date:
-        <input type="date" name="toDate" value="<%= form.toDate %>">
-      </label>
-      <br>
+      <div class="card">
+        <h3>Filters</h3>
 
-      <label>Minimum rating:
-        <input type="number" name="minRating" min="1" max="5" value="<%= form.minRating %>">
-      </label>
-      <br><br>
+        <form method="GET" action="/runs/search">
+          <label>From date:
+            <input type="date" name="fromDate" value="<%= form.fromDate %>">
+          </label>
 
-      <input type="submit" value="Search">
-    </form>
+          <label>To date:
+            <input type="date" name="toDate" value="<%= form.toDate %>">
+          </label>
 
-    <h2>Results</h2>
+          <label>Minimum rating:
+            <input type="number" name="minRating" min="1" max="5" value="<%= form.minRating %>">
+          </label>
 
-    <% if (runs.length === 0) { %>
-      <p>No runs found. Try changing your filters or log a run first.</p>
-    <% } else { %>
-      <table border="1" cellpadding="4" cellspacing="0">
-        <tr>
-          <th>Date</th>
-          <th>Route</th>
-          <th>Duration (min)</th>
-          <th>Rating</th>
-          <th>Notes</th>
-        </tr>
-        <% runs.forEach(function(run) { %>
-          <tr>
-            <td><%= run.run_date %></td>
-            <td><%= run.route_name %></td>
-            <td><%= run.duration_minutes %></td>
-            <td><%= run.rating %></td>
-            <td><%= run.notes %></td>
-          </tr>
-        <% }); %>
-      </table>
-    <% } %>
+          <input type="submit" value="Search">
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>Results</h3>
+
+        <% if (runs.length === 0) { %>
+          <p>No runs found. Try changing your filters or log a run first.</p>
+        <% } else { %>
+          <table class="styled-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Route</th>
+                <th>Duration (min)</th>
+                <th>Rating</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% runs.forEach(function(run) { %>
+                <tr>
+                  <td>
+                    <% if (run.run_date && run.run_date.toISOString) { %>
+                      <%= run.run_date.toISOString().slice(0,10) %>
+                    <% } else { %>
+                      <%= run.run_date %>
+                    <% } %>
+                  </td>
+                  <td><%= run.route_name %></td>
+                  <td>
+                    <% if (run.duration_minutes != null && !isNaN(run.duration_minutes)) { %>
+                      <%= Number(run.duration_minutes).toFixed(1) %>
+                    <% } else { %>
+                      -
+                    <% } %>
+                  </td>
+                  <td>
+                    <% if (run.rating != null && !isNaN(run.rating)) { %>
+                      <%= run.rating %>/5
+                    <% } else { %>
+                      -
+                    <% } %>
+                  </td>
+                  <td><%= run.notes || '' %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        <% } %>
+      </div>
+    </div>
   </body>
 </html>

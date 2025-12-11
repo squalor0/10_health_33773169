@@ -3,63 +3,89 @@
   <head>
     <title>Generate Route - GPS Shape Runner</title>
     <link rel="stylesheet" href="/styles.css">
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet/dist/leaflet.css"
-    >
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
   </head>
+
   <body>
-    <h1>Generate a Shape Route</h1>
+    <!-- Navigation Bar -->
+    <nav>
+      <a href="/">Home</a>
+      <a href="/about">About</a>
 
-    <p>Logged in as: <%= loggedInUser %></p>
-    <p><a href="/">Home</a> | <a href="/logout">Logout</a></p>
+      <% if (loggedInUser) { %>
+        <a href="/routes/generate">Generate Route</a>
+        <a href="/routes/search">My Routes</a>
+        <a href="/runs/add">Log Run</a>
+        <a href="/runs/search">My Runs</a>
 
-    <% if (error) { %>
-      <p style="color:red;"><%= error %></p>
-    <% } %>
+        <span style="margin-left:auto;">
+          <a href="/logout">Logout</a>
+        </span>
+      <% } else { %>
+        <span style="margin-left:auto;">
+          <a href="/login">Login</a>
+          <a href="/register">Register</a>
+        </span>
+      <% } %>
+    </nav>
 
-    <p id="geoStatus" style="color: #555;"></p>
+    <div class="page">
+      <h1>Generate a Shape Route</h1>
 
-    <div id="drawMap"></div>
+      <% if (error) { %>
+        <div class="error"><%= error %></div>
+      <% } %>
 
-    <form method="POST" action="/routes/generate">
-      <label>Shape (for preset mode):
-        <select name="shapeName">
-          <option value="square" <%= form.shapeName === 'square' ? 'selected' : '' %>>Square</option>
-          <option value="triangle" <%= form.shapeName === 'triangle' ? 'selected' : '' %>>Triangle</option>
-        </select>
-      </label>
-      <br>
+      <p id="geoStatus" class="muted"></p>
 
-      <label>Center latitude:
-        <input type="text" name="centerLat" value="<%= form.centerLat %>">
-      </label>
-      <br>
+      <div class="card">
+        <h3>Draw Your Shape</h3>
+        <p class="muted">
+          Click on the map to add points for your custom shape. Each click adds a
+          point and joins it to the previous one. The first point is shown in
+          yellow, the last point in orange, and middle points in red.
+        </p>
 
-      <label>Center longitude:
-        <input type="text" name="centerLng" value="<%= form.centerLng %>">
-      </label>
-      <br>
+        <div id="drawMap"></div>
 
-      <label>Scale (km, used only for preset shapes):
-        <input type="number" name="scaleKm" value="<%= form.scaleKm %>" step="0.5">
-      </label>
-      <br>
+        <button type="button" id="clearShapeBtn" class="secondary">Clear shape</button>
+      </div>
 
-      <!-- Hidden field that will contain the drawn points as JSON -->
-      <input type="hidden" name="pointsJson" id="pointsJson">
+      <div class="card">
+        <h3>Route Settings</h3>
+        <form method="POST" action="/routes/generate">
+          <label>Shape (for preset mode, if you don't draw):
+            <select name="shapeName">
+              <option value="square" <%= form.shapeName === 'square' ? 'selected' : '' %>>Square</option>
+              <option value="triangle" <%= form.shapeName === 'triangle' ? 'selected' : '' %>>Triangle</option>
+            </select>
+          </label>
 
-      <p>
-        Click on the map to add points for your custom shape. Each click adds
-        a point and joins it to the previous one. Use "Clear shape" to start
-        again. If you don't draw anything, the preset shape above will be used.
-      </p>
+          <label>Centre latitude:
+            <input type="text" name="centerLat" value="<%= form.centerLat %>">
+          </label>
 
-      <button type="button" id="clearShapeBtn">Clear shape</button>
-      <br><br>
+          <label>Centre longitude:
+            <input type="text" name="centerLng" value="<%= form.centerLng %>">
+          </label>
 
-      <input type="submit" id="generateBtn" value="Generate Route" disabled>
-    </form>
+          <label>Scale (km, used only for preset shapes):
+            <input type="number" name="scaleKm" value="<%= form.scaleKm %>" step="0.5">
+          </label>
+
+          <!-- Hidden field that will contain the drawn points as JSON -->
+          <input type="hidden" name="pointsJson" id="pointsJson">
+
+          <p class="muted">
+            If you draw at least two points on the map, your custom shape will be
+            used to generate a road-snapped route. If you leave the map empty,
+            the selected preset shape will be used instead.
+          </p>
+
+          <input type="submit" id="generateBtn" value="Generate Route" disabled>
+        </form>
+      </div>
+    </div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
@@ -71,7 +97,7 @@
         var generateBtn = document.getElementById('generateBtn');
         var clearBtn = document.getElementById('clearShapeBtn');
 
-        // Default center
+        // Default center (London)
         var startLat = parseFloat(latInput.value) || 51.505;
         var startLng = parseFloat(lngInput.value) || -0.09;
 
@@ -83,7 +109,28 @@
         }).addTo(map);
 
         var drawnPoints = [];
+        var markers = [];
         var polyline = L.polyline([], { color: 'red' }).addTo(map);
+
+        function refreshMarkers() {
+          for (var i = 0; i < markers.length; i++) {
+            var color = 'red';
+
+            if (i === 0 && markers.length > 0) {
+              color = 'yellow'; // first point
+            }
+            if (i === markers.length - 1 && markers.length > 1) {
+              color = 'orange'; // last point
+            }
+
+            markers[i].setStyle({
+              color: color,
+              fillColor: color,
+              fillOpacity: 1
+            });
+            markers[i].bindPopup('Point ' + (i + 1));
+          }
+        }
 
         function updatePointsField() {
           var simplePoints = drawnPoints.map(function (p) {
@@ -95,9 +142,17 @@
         }
 
         map.on('click', function (e) {
+          var marker = L.circleMarker(e.latlng, {
+            radius: 5,
+            color: 'red',
+            fillColor: 'red',
+            fillOpacity: 1
+          }).addTo(map);
+
           drawnPoints.push(e.latlng);
-          L.circleMarker(e.latlng, { radius: 4 }).addTo(map);
+          markers.push(marker);
           polyline.setLatLngs(drawnPoints);
+          refreshMarkers();
           updatePointsField();
         });
 
@@ -106,12 +161,12 @@
           pointsField.value = '';
           generateBtn.disabled = true;
           polyline.setLatLngs([]);
-          // Remove all markers
-          map.eachLayer(function (layer) {
-            if (layer instanceof L.CircleMarker) {
-              map.removeLayer(layer);
-            }
+
+          // Remove existing markers from map
+          markers.forEach(function (m) {
+            map.removeLayer(m);
           });
+          markers = [];
         });
 
         // Geolocation to move map + centre inputs near the user

@@ -3,81 +3,118 @@
   <head>
     <title>Your Route - Shape Runner</title>
     <link rel="stylesheet" href="/styles.css">
-    <!-- Leaflet CSS -->
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet/dist/leaflet.css"
-    >
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
   </head>
+
   <body>
-    <h1>Your Generated Route</h1>
-    <div id="map"></div>
+    <!-- Navigation Bar -->
+    <nav>
+      <a href="/">Home</a>
+      <a href="/about">About</a>
+      <a href="/routes/generate">Generate Route</a>
+      <a href="/routes/search">My Routes</a>
+      <a href="/runs/add">Log Run</a>
+      <a href="/runs/search">My Runs</a>
 
-    <p>Shape: <strong><%= shapeName %></strong></p>
-    <p>Centre: <%= centerLat.toFixed(5) %>, <%= centerLng.toFixed(5) %></p>
-    <p>Scale: <%= scaleKm %> km</p>
-    <p>Total route distance (approx): <strong><%= totalDistanceKm.toFixed(2) %> km</strong></p>
+      <span style="margin-left:auto;">
+        <a href="/logout">Logout</a>
+      </span>
+    </nav>
 
-    <h2>Steps</h2>
-    <ol>
-      <% for (var i = 0; i < steps.length; i++) { %>
-        <li>
-          <%= steps[i].instruction %><br>
-          From: (<%= steps[i].fromLat.toFixed(5) %>, <%= steps[i].fromLng.toFixed(5) %>)<br>
-          To:   (<%= steps[i].toLat.toFixed(5) %>, <%= steps[i].toLng.toFixed(5) %>)
-        </li>
-      <% } %>
-    </ol>
+    <div class="page">
 
-    <h2>Save This Route</h2>
-    <form method="POST" action="/routes/save">
-        <label>Route Name:
+      <h1>Your Generated Route</h1>
+
+      <div class="card">
+        <div id="map"></div>
+
+        <p>Shape: <strong><%= shapeName %></strong></p>
+        <p>Centre: <%= centerLat.toFixed(5) %>, <%= centerLng.toFixed(5) %></p>
+        <p>Scale: <%= scaleKm %> km</p>
+        <p>Total route distance (approx):
+          <strong><%= totalDistanceKm.toFixed(2) %> km</strong>
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>Steps</h2>
+        <ol>
+          <% for (var i = 0; i < steps.length; i++) { %>
+            <li>
+              <%= steps[i].instruction %><br>
+              From: (<%= steps[i].fromLat.toFixed(5) %>, <%= steps[i].fromLng.toFixed(5) %>)<br>
+              To: (<%= steps[i].toLat.toFixed(5) %>, <%= steps[i].toLng.toFixed(5) %>)
+            </li>
+          <% } %>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h2>Save This Route</h2>
+
+        <form method="POST" action="/routes/save">
+          <label>Route Name:
             <input type="text" name="routeName" required>
-        </label>
-        <br>
+          </label>
 
-        <!-- Hidden fields -->
-        <input type="hidden" name="shapeName" value="<%= shapeName %>">
-        <input type="hidden" name="centerLat" value="<%= centerLat %>">
-        <input type="hidden" name="centerLng" value="<%= centerLng %>">
-        <input type="hidden" name="scaleKm" value="<%= scaleKm %>">
-        <input type="hidden" name="totalDistanceKm" value="<%= totalDistanceKm %>">
+          <!-- Hidden fields -->
+          <input type="hidden" name="shapeName" value="<%= shapeName %>">
+          <input type="hidden" name="centerLat" value="<%= centerLat %>">
+          <input type="hidden" name="centerLng" value="<%= centerLng %>">
+          <input type="hidden" name="scaleKm" value="<%= scaleKm %>">
+          <input type="hidden" name="totalDistanceKm" value="<%= totalDistanceKm %>">
 
-        <input type="submit" value="Save Route">
-    </form>
+          <input type="submit" value="Save Route">
+        </form>
+      </div>
 
-    <p>
-      <a href="/routes/generate">Generate another route</a> |
-      <a href="/">Back to home</a>
-    </p>
-    <!-- Leaflet JS -->
+      <p>
+        <a href="/routes/generate">Generate another route</a> |
+        <a href="/">Back to home</a>
+      </p>
+
+    </div>
+
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
     <script>
-        // Route polyline points ([lat, lng] pairs) from server
-        var routePoints = <%- JSON.stringify(routePoints) %>;
-        // Original waypoints (clicked points or shape corners)
-        var waypoints = <%- JSON.stringify(waypoints || []) %>;
+      // Route polyline points ([lat, lng] pairs) from server
+      var routePoints = <%- JSON.stringify(routePoints) %>;
+      // Original waypoints (clicked points or shape corners)
+      var waypoints = <%- JSON.stringify(waypoints || []) %>;
 
-        if (routePoints.length > 0) {
-            var map = L.map('map').setView(routePoints[0], 14);
+      if (routePoints.length > 0) {
+        var map = L.map('map').setView(routePoints[0], 14);
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
 
-            var polyline = L.polyline(routePoints, { color: 'blue' }).addTo(map);
-            map.fitBounds(polyline.getBounds());
+        var polyline = L.polyline(routePoints, { color: 'blue' }).addTo(map);
+        map.fitBounds(polyline.getBounds());
 
-            // Add numbered markers for the waypoints
-            for (var i = 0; i < waypoints.length; i++) {
-                var wp = waypoints[i];
-                var marker = L.circleMarker([wp.lat, wp.lng], { radius: 5, color: 'red' }).addTo(map);
-                marker.bindPopup('Point ' + (i + 1));
-            }
-        } else {
-            document.getElementById('map').innerHTML = 'No route points available.';
+        // Add colored and numbered markers for original waypoints
+        for (var i = 0; i < waypoints.length; i++) {
+          var wp = waypoints[i];
+
+          var color = 'red';
+          if (i === 0) color = 'yellow';
+          if (i === waypoints.length - 1 && waypoints.length > 1) color = 'orange';
+
+          var marker = L.circleMarker([wp.lat, wp.lng], {
+            radius: 6,
+            color: color,
+            fillColor: color,
+            fillOpacity: 1
+          }).addTo(map);
+
+          marker.bindPopup('Point ' + (i + 1));
         }
+      } else {
+        document.getElementById('map').innerHTML = 'No route points available.';
+      }
     </script>
+
   </body>
 </html>

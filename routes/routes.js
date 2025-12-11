@@ -74,7 +74,7 @@ function shapeToLatLng(shapeCoords, centerLat, centerLng, scaleKm) {
   return result;
 }
 
-// Rough distance in km between two lat/lng points
+// distance in km between two lat/lng points
 function distanceKm(lat1, lng1, lat2, lng2) {
   var R = 6371;
   var dLat = (lat2 - lat1) * Math.PI / 180;
