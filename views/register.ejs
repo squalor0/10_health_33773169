@@ -27,12 +27,18 @@
       <div class="card">
         <form method="POST" action="/register">
           <label>Username:
-            <input type="text" name="username" required>
+            <input type="text" name="username" required value="<%= username || '' %>">
           </label>
 
           <label>Password:
             <input type="password" name="password" required>
           </label>
+
+          <p class="muted">
+            Password must be at least 8 characters and include:
+            at least one lowercase letter, one uppercase letter,
+            one number, and one special character.
+          </p>
 
           <input type="submit" value="Register">
         </form>

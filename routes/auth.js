@@ -5,7 +5,7 @@ const { check, validationResult } = require('express-validator');
 
 // Show register form
 router.get('/register', function (req, res) {
-  res.render('register.ejs', { error: null });
+  res.render('register.ejs', { error: null, username: '' });
 });
 
 // Process register form with validation
@@ -35,7 +35,8 @@ router.post(
     if (!errors.isEmpty()) {
       // Show the first validation error
       return res.render('register.ejs', {
-        error: errors.array()[0].msg
+        error: errors.array()[0].msg,
+        username: req.body.username
       });
     }
 
@@ -54,7 +55,7 @@ router.post(
         function (err2) {
           if (err2) {
             console.error(err2);
-            return res.render('register.ejs', { error: 'Username may already exist.' });
+            return res.render('register.ejs', { error: 'Username may already exist.', username: req.body.username });
           }
 
           // Auto-login after registration

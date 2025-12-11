@@ -29,7 +29,6 @@
           <label>Shape:
             <select name="shapeName">
               <option value="all" <%= form.shapeName === 'all' ? 'selected' : '' %>>All</option>
-              <option value="heart" <%= form.shapeName === 'heart' ? 'selected' : '' %>>Heart</option>
               <option value="square" <%= form.shapeName === 'square' ? 'selected' : '' %>>Square</option>
               <option value="triangle" <%= form.shapeName === 'triangle' ? 'selected' : '' %>>Triangle</option>
             </select>
@@ -79,8 +78,13 @@
                   </td>
 
                   <td>
-                    <%= route.center_lat.toFixed(5) %>,
-                    <%= route.center_lng.toFixed(5) %>
+                    <% if (route.center_lat != null && !isNaN(route.center_lat) &&
+                        route.center_lng != null && !isNaN(route.center_lng)) { %>
+                      <%= Number(route.center_lat).toFixed(5) %>,
+                      <%= Number(route.center_lng).toFixed(5) %>
+                    <% } else { %>
+                      -
+                    <% } %>
                   </td>
 
                   <td>

@@ -370,12 +370,10 @@ router.post('/save', redirectLogin, function (req, res) {
             return res.send('Error saving route');
           }
 
-          // Redirect to a confirmation page or back home
-          res.send(`
-            <h1>Route Saved!</h1>
-            <p><a href="/">Home</a></p>
-            <p><a href="/routes/generate">Generate Another Route</a></p>
-          `);
+          // Render to route saved page
+          res.render('route_saved.ejs', {
+            loggedInUser: req.session.username
+          });
         }
       );
     }

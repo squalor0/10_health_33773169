@@ -89,12 +89,9 @@ router.post('/add', redirectLogin, function (req, res) {
           return res.send('Error saving run');
         }
 
-        res.send(`
-          <h1>Run Logged!</h1>
-          <p><a href="/runs/add">Log another run</a></p>
-          <p><a href="/runs/search">View my run history</a></p>
-          <p><a href="/">Home</a></p>
-        `);
+        res.render('run_logged.ejs', {
+            loggedInUser: req.session.username
+        });
       }
     );
   });
