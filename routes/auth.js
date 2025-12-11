@@ -3,6 +3,8 @@ var bcrypt = require('bcrypt');
 var router = express.Router();
 const { check, validationResult } = require('express-validator');
 
+var BASE_URL = process.env.HEALTH_BASE_PATH || '/';
+
 // Show register form
 router.get('/register', function (req, res) {
   res.render('register.ejs', { error: null, username: '' });
@@ -60,7 +62,7 @@ router.post(
 
           // Auto-login after registration
           req.session.username = username;
-          res.redirect('/');
+          res.redirect(BASE_URL);
         }
       );
     });
@@ -105,7 +107,7 @@ router.post('/login', function (req, res, next) {
         }
 
         req.session.username = user.username;
-        res.redirect('/');
+        res.redirect(BASE_URL);
       });
     }
   );

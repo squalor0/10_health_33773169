@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+var BASE_URL = process.env.HEALTH_BASE_PATH || '/';
 
 // GET / - Home page
 router.get('/', function (req, res) {
@@ -63,7 +64,7 @@ router.get('/about', function (req, res) {
 
 router.get('/logout', function (req, res) {
   req.session.destroy(function () {
-    res.redirect('/');
+    res.redirect(BASE_URL);
   });
 });
 
