@@ -126,6 +126,27 @@ function routeShapeOnRoads(points, callback) {
     return callback(null, null);
   }
 
+  if (!points || points.length < 2) {
+    return callback(new Error('Not enough points to route'));
+  }
+
+  // Cap number of points to avoid ORS limits
+  if (points.length > 40) {
+    var step = Math.ceil(points.length / 40);
+    var reduced = [];
+    for (var i = 0; i < points.length; i += step) {
+      reduced.push(points[i]);
+    }
+    // Ensure the final point is included
+    var last = points[points.length - 1];
+    var lastReduced = reduced[reduced.length - 1];
+    if (lastReduced.lat !== last.lat || lastReduced.lng !== last.lng) {
+      reduced.push(last);
+    }
+    points = reduced;
+    console.log('Downsampled routing points to', points.length, 'coordinates');
+  }
+
   // ORS expects [lng, lat]
   var coords = points.map(function (p) {
     return [p.lng, p.lat];
@@ -166,9 +187,7 @@ function routeShapeOnRoads(points, callback) {
       });
 
       // distance is in metres
-      var distanceMeters = feature.properties && feature.properties.summary
-        ? feature.properties.summary.distance
-        : null;
+      var distanceMeters = feature.properties && feature.properties.summary && feature.properties.summary.distance;
 
       var distanceKm = distanceMeters ? distanceMeters / 1000 : null;
 
@@ -235,8 +254,16 @@ router.post('/generate', redirectLogin, function (req, res) {
     straightPoints = shapeToLatLng(shapeCoords, centerLat, centerLng, scaleKm);
   }
 
-  // densifying line to improve shape
-  var routingInputPoints = densifyPoints(straightPoints, 8);
+  var segmentsPerEdge = 1;
+
+  // If the user drew a simple line (2–3 points), do NOT densify
+  if (straightPoints.length >= 4 && straightPoints.length <= 8) {
+    segmentsPerEdge = 5;          // densify
+  } else if (straightPoints.length > 8) {
+    segmentsPerEdge = 1;          // no densify for many points
+  }
+
+  var routingInputPoints = densifyPoints(straightPoints, segmentsPerEdge);
   // try to get a road-snapped route from ORS
   routeShapeOnRoads(routingInputPoints, function (err, routingResult) {
     // Points shown on the map
@@ -249,7 +276,7 @@ router.post('/generate', redirectLogin, function (req, res) {
       totalDistanceKm = routingResult.distanceKm;
     } else {
       console.log('Falling back to straight-line distance and points.');
-      // Build straight-line distance as before
+      // Build straight-line distance
       totalDistanceKm = 0;
       for (var i = 1; i < straightPoints.length; i++) {
         var prev = straightPoints[i - 1];
