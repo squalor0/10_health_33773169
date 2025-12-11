@@ -90,6 +90,32 @@ function distanceKm(lat1, lng1, lat2, lng2) {
   return R * c;
 }
 
+// Create extra points between each pair of points to better preserve shape
+function densifyPoints(points, segmentsPerEdge) {
+  if (!points || points.length < 2) return points;
+
+  var result = [];
+  for (var i = 0; i < points.length - 1; i++) {
+    var a = points[i];
+    var b = points[i + 1];
+
+    // Always include the start of the segment
+    if (i === 0) {
+      result.push({ lat: a.lat, lng: a.lng });
+    }
+
+    // Add intermediate points
+    for (var k = 1; k <= segmentsPerEdge; k++) {
+      var t = k / segmentsPerEdge;
+      var lat = a.lat + t * (b.lat - a.lat);
+      var lng = a.lng + t * (b.lng - a.lng);
+      result.push({ lat: lat, lng: lng });
+    }
+  }
+
+  return result;
+}
+
 // Call OpenRouteService to snap points to roads
 function routeShapeOnRoads(points, callback) {
   var apiKey = process.env.ORS_API_KEY;
@@ -209,8 +235,10 @@ router.post('/generate', redirectLogin, function (req, res) {
     straightPoints = shapeToLatLng(shapeCoords, centerLat, centerLng, scaleKm);
   }
 
+  // densifying line to improve shape
+  var routingInputPoints = densifyPoints(straightPoints, 8);
   // try to get a road-snapped route from ORS
-  routeShapeOnRoads(straightPoints, function (err, routingResult) {
+  routeShapeOnRoads(routingInputPoints, function (err, routingResult) {
     // Points shown on the map
     var mapPoints = straightPoints;
     var totalDistanceKm;
